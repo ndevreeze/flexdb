@@ -1,0 +1,2 @@
+[2018-07-13 17:29] entry point is determined from filename, is called sqlite3_percentile_init. Therefore the dll should not
+  be renamed to eg percentile-x64.dll. Or the entry point should be named explicitly.
