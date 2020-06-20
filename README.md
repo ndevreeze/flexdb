@@ -1,6 +1,6 @@
 # flexdb
 
-A Clojure library designed to flexibly use a SQL DB with adding tables and columns (DDL) on the fly.
+A Clojure library designed to flexibly use a SQL DB  (SQLite and Postgres) with adding tables and columns (DDL) on the fly.
 
 ## Starting points
 
@@ -14,15 +14,27 @@ FIXME
 
 ## Testing
 
-lein midje
+Functional tests:
 
-  $ lein midje
-  WARNING: any? already refers to: #'clojure.core/any? in namespace: leiningen.midje, being replaced by: #'leiningen.midje/any?
-  Loading module with query: SELECT   load_extension('/path/to/flexdb/resources/sqlite/linux64/percentile.so')
-  Checking connection to Postgres test db...
-  Ok, do Postgres testing
-  nil
-  All checks (105) succeeded.
+    $ lein midje
+    WARNING: any? already refers to: #'clojure.core/any? in namespace: leiningen.midje, being replaced by: #'leiningen.midje/any?
+    Loading module with query: SELECT   load_extension('/path/to/flexdb/resources/sqlite/linux64/percentile.so')
+    Checking connection to Postgres test db...
+    Ok, do Postgres testing
+    nil
+    All checks (105) succeeded.
+
+Speed test:
+
+    ndevreeze.flexdb> (ndevreeze.flexdb-test/test-speed "/tmp/test-speed-clj.db")
+    Starting test
+    Testing with #iterations:  10
+    Testing with #iterations:  100
+    Testing with #iterations:  1000
+    Testing with #iterations:  10000
+    #iterations: 10000
+    Seconds taken:  15
+    #Iter/sec:  666.6666666666667
 
 ## Todo
 
