@@ -2,13 +2,7 @@
 
 A Clojure library designed to flexibly use a SQL DB  (SQLite and Postgres) with adding tables and columns (DDL) on the fly.
 
-## Starting points
-
-* Use should be easy - generate a database with tables/columns on-the-fly.
-* Prefer keywords over strings in parameters and return values.
-* Allow strings instead of keywords in parameters, but return keywords.
-
-## Usage
+## Installation
 
 Leiningen/Boot
 
@@ -19,6 +13,18 @@ Clojure CLI/deps.edn
     ndevreeze/flexdb {:mvn/version "0.4.0"}
 
 [![Clojars Project](https://img.shields.io/clojars/v/ndevreeze/flexdb.svg)](https://clojars.org/ndevreeze/flexdb)
+
+## Usage
+
+    (require '[me.raynes.fs :as fs])
+    (require '[ndevreeze.flexdb :as db])
+
+    (let [db-name "/tmp/test-db.db"
+          _ (fs/delete db-name)
+          db (db/open-db-sqlite db-name)]
+      (db/insert db :testtable {:col "Value of column"})
+      (println "Result of db/query: " (db/query db "select * from testtable"))
+      (db/close-db db))
 
 ## Testing
 
@@ -43,6 +49,12 @@ Speed test:
     #iterations: 10000
     Seconds taken:  15
     #Iter/sec:  666.6666666666667
+
+## Starting points
+
+* Use should be easy - generate a database with tables/columns on-the-fly.
+* Prefer keywords over strings in parameters and return values.
+* Allow strings instead of keywords in parameters, but return keywords.
 
 ## Todo
 
