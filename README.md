@@ -18,6 +18,8 @@ Clojure CLI/deps.edn
 
     ndevreeze/flexdb {:mvn/version "0.4.0"}
 
+[![Clojars Project](https://img.shields.io/clojars/v/ndevreeze/flexdb.svg)](https://clojars.org/ndevreeze/flexdb)
+
 ## Testing
 
 Functional tests:
