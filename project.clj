@@ -15,13 +15,7 @@
   :profiles {:dev {:dependencies [[midje "1.9.9"]]}}
   :resource-paths ["resources"]
 
-  ;;  :repositories [["releases" "scp://somerepo.com/home/repo/"]]
-
-
-  https://repo.clojars.org
-  ;; 2020-06-21: is this the correct syntax?
   :repositories [["releases" {:url "https://clojars.org/repo/"
                               :creds :gpg}]]
 
-  ;;  :deploy-repositories {"releases" :clojars}
   )
