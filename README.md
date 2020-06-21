@@ -47,6 +47,8 @@ Speed test:
 * Documentation and examples (both usage and design) - see tests for now
 * Use protocols or multimethods for DB specific operations
 * Speed profiling and fixing
+* Multi-insert
+* Using db as dynamic var for convenience.
 * Also see source files
 
 ## Related and similar projects (libraries)
