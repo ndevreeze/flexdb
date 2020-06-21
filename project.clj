@@ -1,4 +1,4 @@
-(defproject ndvreeze/flexdb "0.4.0"
+(defproject ndevreeze/flexdb "0.4.0"
   :description "Provide flexible database access, insert records
   without explicitly creating tables and columns first."
   :url "http://github.com/ndevreeze/flexdb"
