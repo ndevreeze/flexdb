@@ -10,7 +10,13 @@ A Clojure library designed to flexibly use a SQL DB  (SQLite and Postgres) with 
 
 ## Usage
 
-FIXME
+Leiningen/Boot
+
+    [ndevreeze/flexdb "0.4.0"]
+
+Clojure CLI/deps.edn
+
+    ndevreeze/flexdb {:mvn/version "0.4.0"}
 
 ## Testing
 
@@ -38,10 +44,15 @@ Speed test:
 
 ## Todo
 
-* Documentation and examples - see tests for now
+* Documentation and examples (both usage and design) - see tests for now
 * Use protocols or multimethods for DB specific operations
 * Speed profiling and fixing
 * Also see source files
+
+## Related and similar projects (libraries)
+
+* Datomic?
+* ORMs such as Korma - Mostly these focus either on the DDL or DML part, not both.
 
 ## License
 
