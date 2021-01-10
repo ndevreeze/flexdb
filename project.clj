@@ -15,7 +15,6 @@
   :profiles {:dev {:dependencies [[midje "1.9.9"]]}}
   :resource-paths ["resources"]
 
-  :repositories [["releases" {:url "https://clojars.org/repo/"
-                              :creds :gpg}]]
+  :repositories [["releases" {:url "https://clojars.org/repo/" :creds :gpg}]]
 
   )
