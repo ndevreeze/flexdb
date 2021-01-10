@@ -190,6 +190,16 @@
                 (db/query handle "select * from testtable"))
               => [{:column1 "abc", :column2 20, :column3 3.14, :id 1}])
 
+(fact-new-db "Create DB without table, insert with :id field, check result with query"
+              handle
+              (do
+                (db/insert handle :testtable {:id 22
+                                              :column1 "abc"
+                                              :column2 20
+                                              :column3 3.14})
+                (db/query handle "select * from testtable"))
+              => [{:column1 "abc", :column2 20, :column3 3.14, :id 22 :id_ 1}])
+
 (fact-new-db "Create DB without table, insert including nulls, check result with query"
               handle
               (do
