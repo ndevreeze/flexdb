@@ -108,7 +108,7 @@
         ))
 
 (defmacro in-transaction
-  "Run nested expressions in a transaction based on handle.
+  "Run body expressions in a transaction based on handle.
    Works in conjunction with set-transaction and current-transaction.
    Returns result of last expression"
   [handle & body]
@@ -152,7 +152,7 @@
  
 ;; 2020-05-21: public function, so it can be tested.
 (defn column-name
-  "Return column-name as keyword for column
+  "Return column-name as :keyword for column
    column - either a string/keyword (then default datatype: string),
            or seq-of [:name :type]
    return vector with name and type.
@@ -163,7 +163,7 @@
         true (keyword (first column))))
 
 (defn- add-table-columns
-  "Add table and columns to :new-columns within map m.
+  "Add table and columns to :new-columns within map m and return this map.
    Table - string or keyword
    Columns - sequence of column-specs (string, keyword, seq-of name, type."
   [m table columns]
@@ -173,10 +173,35 @@
 ;; TODO - use protocol, multimethod or similar for this?
 (defn id-spec
   "Generate id-column spec for database type, given db handle"
-  [handle]
-  (case (-> @handle :db-spec :subprotocol)
-    "sqlite" [:id :integer :primary :key :autoincrement]
-    "postgresql" [:id :serial :primary :key]))
+  ([handle]
+   (id-spec handle :id))
+  ([handle id-field]
+      (case (-> @handle :db-spec :subprotocol)
+        "sqlite" [id-field :integer :primary :key :autoincrement]
+        "postgresql" [id-field :serial :primary :key])))
+
+(defn- next-id-column-name
+  "Generates another id-column name if the current one is already used.
+   If called with something not starting with :id, an error is thrown."
+  [col-name]
+  (cond (= col-name :id) :id_
+        (= col-name :id_) :id_1
+        :else
+        (let [[_ nr] (re-find #"_(\d+)$" (str col-name))
+              next-nr (inc (Integer/parseInt nr))]
+          (keyword (str "id_" next-nr)))))
+
+(defn- id-column-name
+  "Determine name of generated id field based on specs in columns.
+   Normally this is :id, unless an id-field exists in columns. Then it
+  will be id_, or maybe even something else"
+  ([columns col-name]
+   (let [column-names (map column-name columns)]
+     (if (some #{col-name} column-names)
+       (recur columns (next-id-column-name col-name))
+       col-name)))
+  ([columns]
+   (id-column-name columns :id)))
 
 ;; [2018-07-31 21:36] Do use current connection/transaction here.
 ;; [2018-08-01 21:02] also add table/columns to connection 'meta' data :new-columns
@@ -184,13 +209,13 @@
   "Create a table
    table: :keyword or string
    columns: vector of: :keyword, string, vector (name, type) or map (:name, :type).
-   always include a generated 'id' column.
+   always include a generated 'id' column. Iff an id-field exists in columns, create an 'id_' field.
    return - void."
   [db-handle table columns]
   (j/db-do-commands
    (current-connection db-handle)
    [(j/create-table-ddl (dquoted table)
-                        (concat [(id-spec db-handle)]
+                        (concat [(id-spec db-handle (id-column-name columns))]
                                 (mapv column-spec columns)))])
   (if (in-transaction? db-handle)
     (swap! db-handle add-table-columns table columns)))
@@ -358,7 +383,7 @@
         (get sql-db-types cls)
         (get sql-db-types db-type)
         (throw (Exception. (str "Could not determine sql-type for "
-                                db-spec " and " value " (" cls ")"))))))
+                                (:subprotocol db-spec) " and " value " (" cls ")"))))))
 
 (def db-class-map
   "Mapping of java-class to conversion function wrt sql types
