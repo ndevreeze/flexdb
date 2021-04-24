@@ -65,6 +65,11 @@ Speed test:
 * Using db as dynamic var for convenience.
 * Also see source files
 
+## Documentation
+
+* See See codox generated [API docs](https://ndevreeze.github.io/flexdb/api/index.html). 
+* Or: https://cljdoc.org/d/ndevreeze/flexdb/0.4.0/doc/readme
+
 ## Related and similar projects (libraries)
 
 * Datomic?

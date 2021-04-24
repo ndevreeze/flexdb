@@ -15,6 +15,11 @@
   :profiles {:dev {:dependencies [[midje "1.9.9"]]}}
   :resource-paths ["resources"]
 
+  :codox
+  {:output-path "docs/api"
+   :metadata {:doc/format :markdown}
+   :source-uri "https://github.com/ndevreeze/flexdb/blob/master/{filepath}#L{line}"}
+
   :repositories [["releases" {:url "https://clojars.org/repo/" :creds :gpg}]]
 
   )
