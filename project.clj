@@ -5,7 +5,8 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0"]
-                 [me.raynes/fs "1.4.6"] ;; file system functions
+                 ;; [me.raynes/fs "1.4.6"] ;; file system functions
+                 [clj-commons/fs "1.6.307"] ;; in place of me.raynes/fs.
                  [clojure.java-time "0.3.2"] ;; new in Java 8, replacing Joda-time
                  [org.clojure/java.jdbc "0.7.11"]
                  [org.xerial/sqlite-jdbc "3.30.1"] ;; SQLite ...
