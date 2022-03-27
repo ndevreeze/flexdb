@@ -375,13 +375,15 @@
    Default to varchar if no match.
    sql-type dependent on db-spec, eg with date/time values.
    throws an exception if type cannot be determined.
-   (maybe should return varchar in that case)"
+   (maybe should return varchar in that case)
+   2022-03-27: now return varchar"
   [db-spec value]
   (let [db-type (:subprotocol db-spec)
         cls (class value)]
     (or (get sql-db-types [db-type cls])
         (get sql-db-types cls)
         (get sql-db-types db-type)
+        :varchar
         (throw (Exception. (str "Could not determine sql-type for "
                                 (:subprotocol db-spec) " and " value " (" cls ")"))))))
 
