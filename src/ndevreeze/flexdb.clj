@@ -260,19 +260,46 @@
     (j/metadata-query (.getColumns meta nil nil (name table) nil))))
 
 ;; [2018-08-01 21:18] also add tables from :new-columns.
+(defn tables1
+  "Return sequence of table names (as keywords) in database.
+   This one based on DB meta-data, so should be complete.
+   But possible issues with locking in transaction."
+  [db-handle]
+  (set (map (comp keyword :table_name) (table-meta-data db-handle))))
+
+(defn tables2
+  "Return sequence of table names (as keywords) in database.
+   This one checks our own meta-data of just added tables and fields.
+   Should be independent of DB transactions."
+  [db-handle]
+  (set (keys (:new-columns @db-handle))))
+
 (defn tables
   "Return sequence of table names (as keywords) in database."
   [db-handle]
-  (set/union (set (map (comp keyword :table_name) (table-meta-data db-handle)))
-             (set (keys (:new-columns @db-handle)))))
+  (set/union (tables1 db-handle) (tables2 db-handle)))
+
+#_(defn tables
+    "Return sequence of table names (as keywords) in database."
+    [db-handle]
+    (set/union (set (map (comp keyword :table_name) (table-meta-data db-handle)))
+               (set (keys (:new-columns @db-handle)))))
 
 ;; 2020-05-21: this should be easier with a set as result from tables.
 ;; not sure if (boolean) is needed, does not look idiomatic.
-(defn table-exists? 
+(defn table-exists?
   "Given db-handle and table, returns true iff table exists within DB, false otherwise.
-   Table can be keyword or string."
+   Table can be keyword or string.
+   First check own meta-data (tables2), then DB meta-data (tables1)"
   [db-handle table]
-  (boolean (get (tables db-handle) (keyword table))))
+  (boolean (or (get (tables2 db-handle) (keyword table))
+               (get (tables1 db-handle) (keyword table)))))
+
+#_(defn table-exists?
+    "Given db-handle and table, returns true iff table exists within DB, false otherwise.
+   Table can be keyword or string."
+    [db-handle table]
+    (boolean (get (tables db-handle) (keyword table))))
 
 ;; version specific for SQLite.
 ;; TODO - possibly create separate namespaces for postgres and sqlite, and move there.
@@ -281,13 +308,39 @@
                     ["select 1 FROM sqlite_master WHERE type='table' AND name=?"
                      table])))
 
+(defn columns1
+  "Return set of column names (as keywords) in table in database
+   table can be a string or keyword.
+   Look in both DB metadata (with query) as well as newly added tables/columns (in cache)
+   This one based on DB meta-data, so should be complete.
+   But possible issues with locking in transaction."
+  [db-handle table]
+  (set (map (comp keyword :column_name) (column-meta-data db-handle (name table)))))
+
+(defn columns2
+  "Return set of column names (as keywords) in table in database
+   table can be a string or keyword.
+   Look in both DB metadata (with query) as well as newly added tables/columns (in cache)
+   This one checks our own meta-data of just added tables and fields.
+   Should be independent of DB transactions."
+  [db-handle table]
+  (get-in @db-handle [:new-columns (keyword table)]))
+
 (defn columns
   "Return set of column names (as keywords) in table in database
    table can be a string or keyword.
    Look in both DB metadata (with query) as well as newly added tables/columns (in cache)"
   [db-handle table]
-  (set/union (set (map (comp keyword :column_name) (column-meta-data db-handle (name table))))
-          (get-in @db-handle [:new-columns (keyword table)])))
+  (set/union (columns1 db-handle table)
+             (columns2 db-handle table)))
+
+#_(defn columns
+    "Return set of column names (as keywords) in table in database
+   table can be a string or keyword.
+   Look in both DB metadata (with query) as well as newly added tables/columns (in cache)"
+    [db-handle table]
+    (set/union (set (map (comp keyword :column_name) (column-meta-data db-handle (name table))))
+               (get-in @db-handle [:new-columns (keyword table)])))
 
 ;; 2020-05-21: should be easier with columns as a set. Do use
 ;; (boolean), according to spec, only return true or false
@@ -296,7 +349,8 @@
    table - keyword or string
    column - keyword or string"
   [db-handle table column]
-  (boolean (get (columns db-handle (name table)) (keyword column))))
+  (boolean (or (get (columns2 db-handle (name table)) (keyword column))
+               (get (columns1 db-handle (name table)) (keyword column)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DML functions
