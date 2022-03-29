@@ -16,7 +16,9 @@
   []
   (if (= (tlib/get-os) "Linux")
     "/tmp/test-flexdb.db"
-    "c:/tmp/test-flexdb2.db"))
+    (do
+      (fs/mkdir "c:/tmp")
+      "c:/tmp/test-flexdb2.db")))
 
 (defn get-test-db-spec-sqlite
   "Get test database dependent on os"
