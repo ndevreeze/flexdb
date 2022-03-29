@@ -484,15 +484,45 @@
   (let [names (vec (set/difference (set (keys record)) (set cols)))]
     (map #(column-with-datatype db-spec record %) names)))
 
+(defn new-columns2
+  "Determine new columns (including types) for table based on record.
+   cols - the current columns of table (seq of keywords)
+   record - the hashmap with needed columns of table (columns als keywords)
+   return - seq of new columns.
+   If based on own meta-data we see no new columns, we can already return with an empty result;
+   if we see new columns, we also need to check DB meta-data."
+  [db-spec db-handle table cols2 record]
+  (if (nil? db-spec) (throw (Exception. "db-spec is nil")))
+  (let [names (vec (set/difference (set (keys record)) (set cols2)))]
+    (if (seq names)
+      (let [cols1 (columns1 db-handle table)
+            names2 (vec (set/difference (set (keys record)) (set cols1) (set cols2)))]
+        ;; also check db meta-data
+        (map #(column-with-datatype db-spec record %) names2))
+      [])))
+
+;; TODO - maybe refactor, cols1 and cols2 are determined in different places now.
 (defn- add-columns-for-record
-  "Create or alter table so record can be inserted"
+  "Create or alter table so record can be inserted.
+   If based on own meta-data we see no new columns, we can already return with an empty result;
+   if we see new columns, we also need to check DB meta-data."
   [db-handle table record]
-  (let [db-spec (:db-spec @db-handle)]
+  (let [db-spec (:db-spec @db-handle)
+        cols2 (columns2 db-handle table)]
     (if (table-exists? db-handle table)
-      (alter-table db-handle table 
-                   (new-columns db-spec
-                                (columns db-handle table) record))
+      (alter-table db-handle table
+                   (new-columns2 db-spec db-handle table cols2 record))
       (create-table db-handle table (new-columns db-spec [] record)))))
+
+#_(defn- add-columns-for-record
+    "Create or alter table so record can be inserted"
+    [db-handle table record]
+    (let [db-spec (:db-spec @db-handle)]
+      (if (table-exists? db-handle table)
+        (alter-table db-handle table
+                     (new-columns db-spec
+                                  (columns db-handle table) record))
+        (create-table db-handle table (new-columns db-spec [] record)))))
 
 ;; TODO - use map-kv-keys, see above.
 (defn- sanitise-record
