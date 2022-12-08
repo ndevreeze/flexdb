@@ -287,6 +287,10 @@
 
 ;; 2020-05-21: this should be easier with a set as result from tables.
 ;; not sure if (boolean) is needed, does not look idiomatic.
+;; 2022-12-08: check here is case-sensitive. This can give an issue in
+;; SQLite, where table names are case-insensitive. E.g. when first
+;; checking if a table exists, and if not, creating the table.
+;; maybe keep the list of tables within db-handle in lowercase.
 (defn table-exists?
   "Given db-handle and table, returns true iff table exists within DB, false otherwise.
    Table can be keyword or string.
