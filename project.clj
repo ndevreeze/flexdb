@@ -4,16 +4,16 @@
   :url "http://github.com/ndevreeze/flexdb"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.9.0"]
+  :dependencies [[org.clojure/clojure "1.11.1"]
                  ;; [me.raynes/fs "1.4.6"] ;; file system functions
-                 [clj-commons/fs "1.6.307"] ;; in place of me.raynes/fs.
-                 [clojure.java-time "0.3.2"] ;; new in Java 8, replacing Joda-time
-                 [org.clojure/java.jdbc "0.7.11"]
-                 [org.xerial/sqlite-jdbc "3.30.1"] ;; SQLite ...
-                 [org.postgresql/postgresql "42.2.9"] ;; ... and Postgres for now.
+                 [clj-commons/fs "1.6.310"] ;; in place of me.raynes/fs.
+                 [clojure.java-time "1.2.0"] ;; new in Java 8, replacing Joda-time
+                 [org.clojure/java.jdbc "0.7.12"]
+                 [org.xerial/sqlite-jdbc "3.40.0.0"] ;; SQLite ...
+                 [org.postgresql/postgresql "42.5.1"] ;; ... and Postgres for now.
                  ]
   :repl-options {:init-ns ndevreeze.flexdb}
-  :profiles {:dev {:dependencies [[midje "1.9.9"]]}}
+  :profiles {:dev {:dependencies [[midje "1.10.9"]]}}
   :resource-paths ["resources"]
 
   :codox
