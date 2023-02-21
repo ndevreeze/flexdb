@@ -10,7 +10,7 @@
                  [clojure.java-time "1.2.0"] ;; new in Java 8, replacing Joda-time
                  [org.clojure/java.jdbc "0.7.12"]
                  [org.xerial/sqlite-jdbc "3.40.1.0"] ;; SQLite ...
-                 [org.postgresql/postgresql "42.5.3"] ;; ... and Postgres for now.
+                 [org.postgresql/postgresql "42.5.4"] ;; ... and Postgres for now.
                  ]
   :repl-options {:init-ns ndevreeze.flexdb}
   :profiles {:dev {:dependencies [[midje "1.10.9"]]}}
