@@ -9,7 +9,7 @@
                  [clj-commons/fs "1.6.310"] ;; in place of me.raynes/fs.
                  [clojure.java-time "1.2.0"] ;; new in Java 8, replacing Joda-time
                  [org.clojure/java.jdbc "0.7.12"]
-                 [org.xerial/sqlite-jdbc "3.41.2.2"] ;; SQLite ...
+                 [org.xerial/sqlite-jdbc "3.42.0.0"] ;; SQLite ...
                  [org.postgresql/postgresql "42.6.0"] ;; ... and Postgres for now.
                  ]
   :repl-options {:init-ns ndevreeze.flexdb}
