@@ -2,6 +2,7 @@
   (:require [clojure.java.jdbc :as j]
             [clojure.set :as set]
             [java-time :as time]
+            [ndevreeze.logger :as log]
             [ndevreeze.flexdb-sqlite :as dsqlite]
             [ndevreeze.flexdb-sqlite :as dpg]))
 
@@ -15,16 +16,6 @@
 
 (declare table-exists?)
 
-;; Easy log function for now.
-(defn log!
-  "Log argument to stdout and return it"
-  ([arg]
-   (println arg)
-   arg)
-  ([msg arg]
-   (println msg arg)
-   arg))
-
 ;; SQLite specific version, should be renamed and orig one deprecated.
 ;; maybe move to sqlite namespace, but this is more convenient for the user.
 (defn open-db-sqlite
@@ -32,6 +23,7 @@
    Return connection both directly in map as within returned db-spec within map.
    db-name - path to DB, existing or new, as string"
   [db-name]
+  (log/debug "FlexDB - Opening SQLite DB:" db-name)
   (let [db-spec (dsqlite/sqlite-spec db-name)
         conn (j/get-connection db-spec)]
     (atom {:conn conn

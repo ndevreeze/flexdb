@@ -11,6 +11,7 @@
                  [org.clojure/java.jdbc "0.7.12"]
                  [org.xerial/sqlite-jdbc "3.42.0.0"] ;; SQLite ...
                  [org.postgresql/postgresql "42.6.0"] ;; ... and Postgres for now.
+                 [ndevreeze/logger "0.6.1"]
                  ]
   :repl-options {:init-ns ndevreeze.flexdb}
   :profiles {:dev {:dependencies [[midje "1.10.9"]]}}
