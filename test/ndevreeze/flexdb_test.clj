@@ -55,6 +55,7 @@
             => :abc)
 
 ;; TODO use this generic function when working within Postgres
+;; 2023-09-23: disabled temporarily, seems different in new sqlite library: 3.43.0.0.
 (fact-db "Create DB with table, insert, check return value"
          handle
          (let [_ (tlib/drop-test-tables handle)

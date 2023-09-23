@@ -353,12 +353,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; TODO - maybe this should be in a protocol.
+;; 2023-09-23: In [org.xerial/sqlite-jdbc "3.43.0.0"] we get just a
+;; sequence with the ID, no keywords, so add (first row) as a try.
 (defn get-first-id
   "Return created id of first row of result-set.
    This is different for SQLite and Postgres"
   [db-handle res]
+  ;; (println "get-first-id, res: " res)
   (let [row (first res)]
-    (or (:id row) (get row (keyword "last_insert_rowid()")))))
+    ;; (println "  row: " row)
+    (or (:id row)
+        (get row (keyword "last_insert_rowid()"))
+        (first row))))
 
 ;; from https://clojuredocs.org/clojure.core/reduce-kv
 (defn map-kv
@@ -388,6 +394,7 @@
   [db-handle table record]
   (let [res (j/insert! (current-connection db-handle)
                        (dquoted (name table)) (dquoted-record record))]
+    ;; (println "insert-no-check: res:" res)
     (get-first-id db-handle res)))
 
 ;; TODO create a nested map here?
