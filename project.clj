@@ -9,9 +9,11 @@
                  [clj-commons/fs "1.6.310"] ;; in place of me.raynes/fs.
                  [clojure.java-time "1.3.0"] ;; new in Java 8, replacing Joda-time
                  [org.clojure/java.jdbc "0.7.12"]
-                 ;; 2023-09-23: sqlite-jdbc might be bumped to 3.43.0.0 automatically with lein ancient.
-                 ;; this removes some generated-id functionality, need to use 'RETURNING' clause, seems a bit more work.
-                 [org.xerial/sqlite-jdbc "3.42.0.0"] ;; SQLite ...
+                 ;; 2023-09-23: sqlite-jdbc might be bumped to
+                 ;; 3.43.0.0 automatically with lein ancient. This
+                 ;; removes some generated-id functionality, need to
+                 ;; use 'RETURNING' clause, seems a bit more work.
+                 [org.xerial/sqlite-jdbc "3.43.2.1"] ;; SQLite ...
                  [org.postgresql/postgresql "42.6.0"] ;; ... and Postgres for now.
                  [ndevreeze/logger "0.6.1"]
                  ]
