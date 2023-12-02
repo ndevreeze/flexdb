@@ -42,6 +42,9 @@
   [handle]
   (db/query handle (get-test-percentile-module-query)))
 
+;; 2023-12-02: TODO: should set *debug* var or def and define
+;; test-in-new-db as real or no-op macro.
+
 ;; 2019-03-02: quite a lot of similarities between this SQLite version and
 ;; the Postgres one, so maybe should refactor.
 (defmacro test-in-new-db
@@ -63,11 +66,11 @@
        )))
 
 (midje/fact "sqlite-spec"
-             (dsqlite/sqlite-spec (get-test-db)) =>
-             {:classname "org.sqlite.JDBC"
-              :subprotocol "sqlite"
-              :subname (get-test-db)
-              :enable_load_extension true})
+            (dsqlite/sqlite-spec (get-test-db)) =>
+            {:classname "org.sqlite.JDBC"
+             :subprotocol "sqlite"
+             :subname (get-test-db)
+             :enable_load_extension true})
 
 ;; 2019-03-02: This one not applicable for Postgres: DB already exists, is not a file.
 (midje/fact "Create DB (1)"
@@ -104,18 +107,32 @@
 
 ;; 2023-09-23: temporary disabled, in [org.xerial/sqlite-jdbc "3.43.0.0"]
 ;; this seems to be different.
-#_(midje/fact "Create DB, add record, check generated id"
-              (test-in-new-db handle
+;; 2023-11-30: this test still succeeds, with nothing changed. So prb not a good test.
+(midje/fact "Create DB, add record, check generated id"
+            (test-in-new-db handle
+                            (db/insert handle :testtable {:column-1 "abc"
+                                                          :column2 20}))
+            => 1)
+
+;; 2023-11-30: need another test-case: add 2 rows, check the second and has generated id=2.
+;; 2023-11-30: this one indeed fails.
+(midje/fact "Create DB, add 2 records, check last generated id"
+            (test-in-new-db handle
+                            (do
                               (db/insert handle :testtable {:column-1 "abc"
-                                                            :column2 20}))
-              => 1)
+                                                            :column2 20})
+                              (db/insert handle :testtable {:column-1 "abcde"
+                                                            :column2 30})))
+            => 2)
+
+
 
 ;; 2023-09-23: also temporary disabled. same reason as above.
-#_(midje/fact "Create DB, add record, check class of generated id"
-              (test-in-new-db handle
-                              (class (db/insert handle :testtable {:column-1 "abc"
-                                                                   :column2 20})))
-              => java.lang.Integer) ;; so not a long! 32 bits (Long is 64 bits).
+(midje/fact :gen-id "Create DB, add record, check class of generated id"
+            (test-in-new-db handle
+                            (class (db/insert handle :testtable {:column-1 "abc"
+                                                                 :column2 20})))
+            => java.lang.Integer) ;; so not a long! 32 bits (Long is 64 bits).
 
 (midje/fact "Load percentile extension"
             (let [qload (get-test-percentile-module-query)]
@@ -231,3 +248,15 @@
       :cinst "2019-03-01T09:20:30.456Z"
       
       :id 1}])
+
+;; 2023-12-02: to test a single fact, or just with the given tags:
+;; (autotest :filter :gen-id)
+(midje/fact :gen-id "test2b - Create DB, add 2 records, check last generated id"
+            (test-in-new-db handle
+                            (do
+                              (println "Inserting 2 records")
+                              (db/insert handle :testtable {:column-1 "abc"
+                                                            :column2 20})
+                              (db/insert handle :testtable {:column-1 "abcde"
+                                                            :column2 30})))
+            => 2)

@@ -271,12 +271,6 @@
   [db-handle]
   (set/union (tables1 db-handle) (tables2 db-handle)))
 
-#_(defn tables
-    "Return sequence of table names (as keywords) in database."
-    [db-handle]
-    (set/union (set (map (comp keyword :table_name) (table-meta-data db-handle)))
-               (set (keys (:new-columns @db-handle)))))
-
 ;; 2020-05-21: this should be easier with a set as result from tables.
 ;; not sure if (boolean) is needed, does not look idiomatic.
 ;; 2022-12-08: check here is case-sensitive. This can give an issue in
@@ -290,12 +284,6 @@
   [db-handle table]
   (boolean (or (get (tables2 db-handle) (keyword table))
                (get (tables1 db-handle) (keyword table)))))
-
-#_(defn table-exists?
-    "Given db-handle and table, returns true iff table exists within DB, false otherwise.
-   Table can be keyword or string."
-    [db-handle table]
-    (boolean (get (tables db-handle) (keyword table))))
 
 ;; version specific for SQLite.
 ;; TODO - possibly create separate namespaces for postgres and sqlite, and move there.
@@ -330,14 +318,6 @@
   (set/union (columns1 db-handle table)
              (columns2 db-handle table)))
 
-#_(defn columns
-    "Return set of column names (as keywords) in table in database
-   table can be a string or keyword.
-   Look in both DB metadata (with query) as well as newly added tables/columns (in cache)"
-    [db-handle table]
-    (set/union (set (map (comp keyword :column_name) (column-meta-data db-handle (name table))))
-               (get-in @db-handle [:new-columns (keyword table)])))
-
 ;; 2020-05-21: should be easier with columns as a set. Do use
 ;; (boolean), according to spec, only return true or false
 (defn column-exists?
@@ -355,6 +335,8 @@
 ;; TODO - maybe this should be in a protocol.
 ;; 2023-09-23: In [org.xerial/sqlite-jdbc "3.43.0.0"] we get just a
 ;; sequence with the ID, no keywords, so add (first row) as a try.
+;; 2023-11-30: No, not a sequence, just a 1, even if the new id is something else.
+;; need some construction with 'returning'.
 (defn get-first-id
   "Return created id of first row of result-set.
    This is different for SQLite and Postgres"
@@ -387,15 +369,37 @@
   [record]
   (map-kv-key dquoted record))
 
+(defn get-latest-id
+  "Return latest generated id for a table"
+  [db-handle table]
+  (let [query (format "select max(id) max_id from %s" (dquoted (name table)))
+        res (j/query (current-connection db-handle) query)]
+    #_(println "res of get-latest:" res)
+    (-> res first :max_id)))
+
 ;; 2020-05-22: also use dquoted for table
+;; 2023-11-30: new version using 'returning' clause, should work in
+;; both SQLite and Postgres
 (defn insert-no-check
   "Insert record into table, no checks if table/columns exist.
    Return generated id."
   [db-handle table record]
   (let [res (j/insert! (current-connection db-handle)
                        (dquoted (name table)) (dquoted-record record))]
-    ;; (println "insert-no-check: res:" res)
-    (get-first-id db-handle res)))
+    #_(println "insert-no-check2: res:" res)
+    (let [latest-id (get-latest-id db-handle table)]
+      #_(println "latest-id: " latest-id)
+      latest-id)))
+
+;; 2023-12-02: old version, with get-first-id, keep a bit longer.
+#_(defn insert-no-check
+    "Insert record into table, no checks if table/columns exist.
+   Return generated id."
+    [db-handle table record]
+    (let [res (j/insert! (current-connection db-handle)
+                         (dquoted (name table)) (dquoted-record record))]
+      ;; (println "insert-no-check: res:" res)
+      (get-first-id db-handle res)))
 
 ;; TODO create a nested map here?
 ;; or use a multi method? DB specific things in separate namespace, and ask functions there
@@ -409,9 +413,9 @@
    java.lang.Double :float
    java.lang.String :varchar
    nil :varchar
-;; [2019-03-17 13:26] remove defaults per database, want to get an Exception on an unknown class.   
-;;   "sqlite" :varchar
-;;   "postgresql" :varchar
+   ;; [2019-03-17 13:26] remove defaults per database, want to get an Exception on an unknown class.
+   ;;   "sqlite" :varchar
+   ;;   "postgresql" :varchar
    ["postgresql" java.sql.Date] :date
    ["postgresql" java.sql.Timestamp] [:timestamp "(3)" :with :time :zone]
    ["postgresql" java.time.LocalDate] :date
