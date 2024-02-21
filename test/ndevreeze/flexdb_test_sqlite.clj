@@ -11,39 +11,32 @@
 ;; TODO: possibly better with a protocol, which can be extended to support other OS-es.
 ;; TODO: use config to set test-locations, also dependent on OS. Or override through
 ;;       env-var?
+#_(defn get-test-db
+    "Get test database dependent on os"
+    []
+    (if (= (tlib/get-os) "Linux")
+      "/tmp/test-flexdb.db"
+      (do
+        (fs/mkdir "c:/tmp")
+        "c:/tmp/test-flexdb2.db")))
+
+
+
+#_(defn get-test-db
+    "Get test database dependent on os and existence of temp-dir"
+    []
+    (cond (fs/exists? "/tmp") "/tmp/test-flexdb.db"
+          (fs/exists? "c:/tmp") "c:/tmp/test-flexdb2.db"))
+
 (defn get-test-db
-  "Get test database dependent on os"
+  "Get test database using java.io.tmpdir property"
   []
-  (if (= (tlib/get-os) "Linux")
-    "/tmp/test-flexdb.db"
-    (do
-      (fs/mkdir "c:/tmp")
-      "c:/tmp/test-flexdb2.db")))
+  (fs/file (System/getProperty "java.io.tmpdir") "test-flexdb.db"))
 
 (defn get-test-db-spec-sqlite
   "Get test database dependent on os"
   []
   (dsqlite/sqlite-spec (get-test-db)))
-
-;; TODO: it would be nice to have these percentile modules available in the main library dynamicdb. However, this is another aspect, not really part of dynamicdb.
-;; maybe add some generic functions for loading modules?
-
-;; Use resources folder within this project folder.
-;; io/resource  checks existence of the file.
-(defn- get-test-percentile-module-query
-  "Get percentile module query: .so or .dll"
-  []
-  (if (= (tlib/get-os) "Linux")
-    (format "SELECT load_extension('%s')" (tlib/to-local-path (io/resource "sqlite/linux64/percentile.so")))
-    (format "SELECT load_extension('%s')" (tlib/to-local-path (io/resource "sqlite/win64/percentile.dll")))))
-
-(defn- load-percentile-module
-  "Load percentile module. To be called as init-function for each new connection/transaction"
-  [handle]
-  (db/query handle (get-test-percentile-module-query)))
-
-;; 2023-12-02: TODO: should set *debug* var or def and define
-;; test-in-new-db as real or no-op macro.
 
 ;; 2019-03-02: quite a lot of similarities between this SQLite version and
 ;; the Postgres one, so maybe should refactor.
@@ -134,89 +127,28 @@
                                                                  :column2 20})))
             => java.lang.Integer) ;; so not a long! 32 bits (Long is 64 bits).
 
-(midje/fact "Load percentile extension"
-            (let [qload (get-test-percentile-module-query)]
-              (println "Loading module with query:" qload)
-              (test-in-new-db handle
-                              (do
-                                (db/in-transaction
-                                 handle
-                                 (db/query handle qload))
-                                :ok))   ; result of query
-              => :ok))
-
-
-;; percentile query needs be done within same handle/connection as where it is
-;; loaded.
-(midje/fact "Test percentile extension (1)"
-            (test-in-new-db handle
-                            (do
-                              (db/in-transaction
-                               handle
-                               (db/query handle
-                                         (get-test-percentile-module-query))
-                               (doseq [i (range 100)]
-                                 (db/insert handle :ints {:value (inc i)}))
-                               (db/exec handle "create table perc95 as
-                                               select percentile(value, 95) perc
-                                               from ints"))
-                              (db/query handle "select perc from perc95")))
-            => [{:perc 95.05}])
-
- ;; check with declaring a function to always be executed for each new connection/transaction.
-(midje/fact "Test percentile extension (2)"
-            (test-in-new-db handle
-                            (do
-                              (db/set-init-function
-                               handle
-                               #(db/query %
-                                          (get-test-percentile-module-query)))
-                              (db/in-transaction
-                               handle
-                               (doseq [i (range 100)]
-                                 (db/insert handle :ints {:value (inc i)}))
-                               (db/exec handle "create table perc95 as
-                                               select percentile(value, 95) perc
-                                               from ints"))
-                              (db/query handle "select perc from perc95")))
-            => [{:perc 95.05}])
-
-(midje/fact "Test percentile extension (3)"
-            (test-in-new-db handle
-                            (do
-                              (db/set-init-function handle load-percentile-module)
-                              (db/in-transaction
-                               handle
-                               (doseq [i (range 100)]
-                                 (db/insert handle :ints {:value (inc i)}))
-                               (db/exec handle "create table perc95 as
-                                               select percentile(value, 95) perc
-                                               from ints"))
-                              (db/query handle "select perc from perc95")))
-            => [{:perc 95.05}])
- 
 ;; [2019-03-06 21:16] date/times different in SQLite and Postgres.
 ;; In SQLite just a string.
 ;; Should also work without using the 'T' in the middle. But this is not directly the concern of this library.
 (midje/fact
- "Create DB without table, insert all field types, check result with query"
- (test-in-new-db
-  handle
-  (do
-    (db/insert handle :testtable {:colstr "abc"
-                                  :colint 20
-                                  :colfloat 3.14
-                                  :coldate (time/sql-date (time/local-date "2019-03-01"))
-                                  :coldt (time/sql-timestamp 
-                                          (time/local-date-time "2019-03-01T10:20:30.456"))
-                                  })
-    (db/query handle "select * from testtable")))
- => [{:colstr "abc"
-      :colint 20
-      :colfloat 3.14
-      :coldate 1551394800000
-      :coldt 1551432030456
-      :id 1}])
+  "Create DB without table, insert all field types, check result with query"
+  (test-in-new-db
+   handle
+   (do
+     (db/insert handle :testtable {:colstr "abc"
+                                   :colint 20
+                                   :colfloat 3.14
+                                   :coldate (time/sql-date (time/local-date "2019-03-01"))
+                                   :coldt (time/sql-timestamp
+                                           (time/local-date-time "2019-03-01T10:20:30.456"))
+                                   })
+     (db/query handle "select * from testtable")))
+  => [{:colstr "abc"
+       :colint 20
+       :colfloat 3.14
+       :coldate 1551394800000
+       :coldt 1551432030456
+       :id 1}])
 
 (midje/fact
  "Create DB without table, insert JSR 310 types, check result with query.
