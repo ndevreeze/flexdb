@@ -411,6 +411,7 @@
   {java.lang.Integer :integer
    java.lang.Long :integer
    java.lang.Double :float
+   java.lang.Byte :integer
    java.lang.String :varchar
    nil :varchar
    ;; [2019-03-17 13:26] remove defaults per database, want to get an Exception on an unknown class.
