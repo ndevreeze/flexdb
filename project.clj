@@ -4,17 +4,17 @@
   :url "http://github.com/ndevreeze/flexdb"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.11.1"]
+  :dependencies [[org.clojure/clojure "1.11.2"]
                  ;; [me.raynes/fs "1.4.6"] ;; file system functions
-                 [clj-commons/fs "1.6.310"] ;; in place of me.raynes/fs.
+                 [clj-commons/fs "1.6.311"] ;; in place of me.raynes/fs.
                  [clojure.java-time "1.4.2"] ;; new in Java 8, replacing Joda-time
                  [org.clojure/java.jdbc "0.7.12"]
                  ;; 2023-09-23: sqlite-jdbc might be bumped to
                  ;; 3.43.0.0 automatically with lein ancient. This
                  ;; removes some generated-id functionality, need to
                  ;; use 'RETURNING' clause, seems a bit more work.
-                 [org.xerial/sqlite-jdbc "3.45.1.0"] ;; SQLite ...
-                 [org.postgresql/postgresql "42.7.1"] ;; ... and Postgres for now.
+                 [org.xerial/sqlite-jdbc "3.45.2.0"] ;; SQLite ...
+                 [org.postgresql/postgresql "42.7.3"] ;; ... and Postgres for now.
                  [ndevreeze/logger "0.6.1"]
                  ]
   :repl-options {:init-ns ndevreeze.flexdb}
