@@ -14,6 +14,11 @@
 ;; set to true to print more debugging info.
 (def ^:dynamic *DEBUG* false)
 
+(defn version
+  "Return current version of library"
+  []
+  "ndevreeze/flexdb v0.4.2-SNAPSHOT, 2024-03-30 10:48, with sanitise-record fixes")
+
 (declare table-exists?)
 
 ;; SQLite specific version, should be renamed and orig one deprecated.
@@ -533,13 +538,27 @@
         (create-table db-handle table (new-columns db-spec [] record)))))
 
 ;; TODO - use map-kv-keys, see above.
-(defn- sanitise-record
-  "Sanitise column/key names in record. eg replace - by _"
+;; (clojure.string/replace "abc.def" #"[^A-Za-z0-9_]" "_")
+;; could use update-keys here?
+;; [2024-03-30 10:26] Are keys keywords or strings? Or can be both? -> both indeed.
+;; [2024-03-30 10:30] Maybe sanitising should be optional. But this is an opinionated library.
+;; [2024-03-30 10:49] for now not private, so can be checked from other scripts/libs.
+(defn sanitise-record
+  "Sanitise column/key names in record. eg replace - by _
+   Replace every non-letter-digit with an underscore."
   [record]
-  (letfn [(replace-dash [s] (clojure.string/replace s "-" "_"))
+  (letfn [(replace-dash [s] (clojure.string/replace s #"[^A-Za-z0-9_]" "_"))
           (sanitise-key [k] (-> k name replace-dash keyword))]
-    (reduce-kv (fn [m k v] 
-                 (assoc m (sanitise-key k) v)) {} record)))
+    (update-keys record sanitise-key)))
+
+#_(defn- sanitise-record2
+    "Sanitise column/key names in record. eg replace - by _
+   Replace every non-letter-digit with an underscore."
+    [record]
+    (letfn [(replace-dash [s] (clojure.string/replace s #"[^A-Za-z0-9_]" "_"))
+            (sanitise-key [k] (-> k name replace-dash keyword))]
+      (reduce-kv (fn [m k v]
+                   (assoc m (sanitise-key k) v)) {} record)))
 
 ;; TODO: check if add-columns-for-record needs to be more efficient, or some checks within
 ;; clojure code, not needing DB meta data.
