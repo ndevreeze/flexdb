@@ -4,7 +4,7 @@
   :url "http://github.com/ndevreeze/flexdb"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.11.2"]
+  :dependencies [[org.clojure/clojure "1.11.3"]
                  ;; [me.raynes/fs "1.4.6"] ;; file system functions
                  [clj-commons/fs "1.6.311"] ;; in place of me.raynes/fs.
                  [clojure.java-time "1.4.2"] ;; new in Java 8, replacing Joda-time
