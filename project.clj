@@ -13,7 +13,7 @@
                  ;; 3.43.0.0 automatically with lein ancient. This
                  ;; removes some generated-id functionality, need to
                  ;; use 'RETURNING' clause, seems a bit more work.
-                 [org.xerial/sqlite-jdbc "3.45.3.0"] ;; SQLite ...
+                 [org.xerial/sqlite-jdbc "3.46.0.0"] ;; SQLite ...
                  [org.postgresql/postgresql "42.7.3"] ;; ... and Postgres for now.
                  [ndevreeze/logger "0.6.2"]
                  ]
