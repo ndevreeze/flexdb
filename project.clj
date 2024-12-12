@@ -7,13 +7,13 @@
   :dependencies [[org.clojure/clojure "1.12.0"]
                  ;; [me.raynes/fs "1.4.6"] ;; file system functions
                  [clj-commons/fs "1.6.311"] ;; in place of me.raynes/fs.
-                 [clojure.java-time "1.4.2"] ;; new in Java 8, replacing Joda-time
+                 [clojure.java-time "1.4.3"] ;; new in Java 8, replacing Joda-time
                  [org.clojure/java.jdbc "0.7.12"]
                  ;; 2023-09-23: sqlite-jdbc might be bumped to
                  ;; 3.43.0.0 automatically with lein ancient. This
                  ;; removes some generated-id functionality, need to
                  ;; use 'RETURNING' clause, seems a bit more work.
-                 [org.xerial/sqlite-jdbc "3.47.0.0"] ;; SQLite ...
+                 [org.xerial/sqlite-jdbc "3.47.1.0"] ;; SQLite ...
                  [org.postgresql/postgresql "42.7.4"] ;; ... and Postgres for now.
                  [ndevreeze/logger "0.6.2"]
                  ]
