@@ -6,7 +6,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.12.1"]
                  ;; [me.raynes/fs "1.4.6"] ;; file system functions
-                 [clj-commons/fs "1.6.311"] ;; in place of me.raynes/fs.
+                 [clj-commons/fs "1.6.312"] ;; in place of me.raynes/fs.
                  [clojure.java-time "1.4.3"] ;; new in Java 8, replacing Joda-time
                  [org.clojure/java.jdbc "0.7.12"]
                  ;; 2023-09-23: sqlite-jdbc might be bumped to
