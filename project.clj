@@ -4,7 +4,7 @@
   :url "http://github.com/ndevreeze/flexdb"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.12.1"]
+  :dependencies [[org.clojure/clojure "1.12.2"]
                  ;; [me.raynes/fs "1.4.6"] ;; file system functions
                  [clj-commons/fs "1.6.312"] ;; in place of me.raynes/fs.
                  [clojure.java-time "1.4.3"] ;; new in Java 8, replacing Joda-time
@@ -14,7 +14,7 @@
                  ;; removes some generated-id functionality, need to
                  ;; use 'RETURNING' clause, seems a bit more work.
                  [org.xerial/sqlite-jdbc "3.50.3.0"] ;; SQLite ...
-                 [org.postgresql/postgresql "42.7.7"] ;; ... and Postgres for now.
+                 [org.postgresql/postgresql "42.7.8"] ;; ... and Postgres for now.
                  [ndevreeze/logger "0.6.2"]
                  ]
   :repl-options {:init-ns ndevreeze.flexdb}
