@@ -1,10 +1,17 @@
 (ns ndevreeze.flexdb
   (:require [clojure.java.jdbc :as j]
             [clojure.set :as set]
+            [clojure.string :as str]
             [java-time :as time]
+            [flatland.ordered.map :as omap]
+            [flatland.ordered.set :as oset]
             [ndevreeze.logger :as log]
             [ndevreeze.flexdb-sqlite :as dsqlite]
-            [ndevreeze.flexdb-sqlite :as dpg]))
+            ;; 2025-10-29: had duplicate flexdb-sqlite below. Replaced
+            ;; with flexdb-pg, but never used. Makes sense.
+            ;; [ndevreeze.flexdb-pg :as dpg]
+
+            [me.raynes.fs :as fs]))
 
 ;; Starting points:
 ;; * Use should be easy - generate a database with tables/columns on-the-fly.
@@ -13,11 +20,12 @@
 
 ;; set to true to print more debugging info.
 (def ^:dynamic *DEBUG* false)
+;; (def ^:dynamic *DEBUG* true)
 
 (defn version
   "Return current version of library"
   []
-  "ndevreeze/flexdb v0.4.2-SNAPSHOT, 2024-03-30 10:48, with sanitise-record fixes")
+  "ndevreeze/flexdb v0.4.2-SNAPSHOT, 2025-10-29, with ordered-map")
 
 (declare table-exists?)
 
@@ -80,7 +88,7 @@
   (swap! db-handle #(if-not (in-transaction? db-handle)
                       (assoc % :transaction t-con :new-columns {})
                       (throw (Exception. "Transaction already started"))))
-  (if-let [init-f (:init-function @db-handle)]
+  (when-let [init-f (:init-function @db-handle)]
     (init-f db-handle)))
 
 (defn unset-transaction
@@ -124,7 +132,7 @@
   [par]
   (cond (string? par) (str "[" par "]")
         (keyword? par) (str "[" (name par) "]")
-        true (str "[" (str par) "]")))
+        :else (str "[" par "]")))
 
 (defn dquoted
   "Convert par to a string and surround it with double quotes.
@@ -133,7 +141,7 @@
   [par]
   (cond (string? par) (str "\"" par "\"")
         (keyword? par) (str "\"" (name par) "\"")
-        true (str "\"" (str par) "\"")))
+        :else (str "\"" par "\"")))
 
 (defn- column-spec
   "Create column spec including type for create/alter table
@@ -157,7 +165,7 @@
   [column]
   (cond (string? column) (keyword column)
         (keyword? column) column
-        true (keyword (first column))))
+        :else (keyword (first column))))
 
 (defn- add-table-columns
   "Add table and columns to :new-columns within map m and return this map.
@@ -165,7 +173,7 @@
    Columns - sequence of column-specs (string, keyword, seq-of name, type."
   [m table columns]
   (update-in m [:new-columns (keyword table)]
-             #(set/union % (set (map column-name columns)))))
+             #(set/union % (oset/into-ordered-set (map column-name columns)))))
 
 ;; TODO - use protocol, multimethod or similar for this?
 (defn id-spec
@@ -209,12 +217,13 @@
    always include a generated 'id' column. Iff an id-field exists in columns, create an 'id_' field.
    return - void."
   [db-handle table columns]
+  (when *DEBUG* (println (format "create-table called with columns: %s" (vec columns))))
   (j/db-do-commands
    (current-connection db-handle)
    [(j/create-table-ddl (dquoted table)
                         (concat [(id-spec db-handle (id-column-name columns))]
                                 (mapv column-spec columns)))])
-  (if (in-transaction? db-handle)
+  (when (in-transaction? db-handle)
     (swap! db-handle add-table-columns table columns)))
 
 ;; [2018-07-31 21:38] Also use current connection/transaction here.
@@ -232,8 +241,8 @@
       (let [[fld-name fld-type] (column-spec column)]
         (j/execute! (current-connection db-handle)
                     [(str "alter table " (dquoted table) " add column "
-                                 (name fld-name) " " (name fld-type))]))))
-  (if (in-transaction? db-handle)
+                          (name fld-name) " " (name fld-type))]))))
+  (when (in-transaction? db-handle)
     (swap! db-handle add-table-columns table columns)))
 
 ;; 2018-07-29: check if we can use current-connection here as well.
@@ -262,14 +271,14 @@
    This one based on DB meta-data, so should be complete.
    But possible issues with locking in transaction."
   [db-handle]
-  (set (map (comp keyword :table_name) (table-meta-data db-handle))))
+  (oset/into-ordered-set (map (comp keyword :table_name) (table-meta-data db-handle))))
 
 (defn tables2
   "Return sequence of table names (as keywords) in database.
    This one checks our own meta-data of just added tables and fields.
    Should be independent of DB transactions."
   [db-handle]
-  (set (keys (:new-columns @db-handle))))
+  (oset/into-ordered-set (keys (:new-columns @db-handle))))
 
 (defn tables
   "Return sequence of table names (as keywords) in database."
@@ -304,7 +313,7 @@
    This one based on DB meta-data, so should be complete.
    But possible issues with locking in transaction."
   [db-handle table]
-  (set (map (comp keyword :column_name) (column-meta-data db-handle (name table)))))
+  (oset/into-ordered-set (map (comp keyword :column_name) (column-meta-data db-handle (name table)))))
 
 (defn columns2
   "Return set of column names (as keywords) in table in database
@@ -345,7 +354,7 @@
 (defn get-first-id
   "Return created id of first row of result-set.
    This is different for SQLite and Postgres"
-  [db-handle res]
+  [_db-handle res]
   ;; (println "get-first-id, res: " res)
   (let [row (first res)]
     ;; (println "  row: " row)
@@ -389,12 +398,19 @@
   "Insert record into table, no checks if table/columns exist.
    Return generated id."
   [db-handle table record]
-  (let [res (j/insert! (current-connection db-handle)
-                       (dquoted (name table)) (dquoted-record record))]
-    #_(println "insert-no-check2: res:" res)
-    (let [latest-id (get-latest-id db-handle table)]
-      #_(println "latest-id: " latest-id)
-      latest-id)))
+  (j/insert! (current-connection db-handle)
+             (dquoted (name table)) (dquoted-record record))
+  (get-latest-id db-handle table))
+
+;; 2025-10-29: another old version, _res is not used.
+#_(defn insert-no-check
+    "Insert record into table, no checks if table/columns exist.
+   Return generated id."
+    [db-handle table record]
+    (let [_res (j/insert! (current-connection db-handle)
+                          (dquoted (name table)) (dquoted-record record))
+          latest-id (get-latest-id db-handle table)]
+      latest-id))
 
 ;; 2023-12-02: old version, with get-first-id, keep a bit longer.
 #_(defn insert-no-check
@@ -487,14 +503,21 @@
     (cond (keyword? col-tp) [column-name col-tp]
           (vector? col-tp) (into [] (concat [column-name] col-tp)))))
 
+;; 2025-10-29: From https://cljdoc.org/d/org.flatland/ordered/1.15.12/api/flatland.ordered.set#ordered-set:
+;; Note that clojure.set functions like union, intersection, and
+;; difference can change the order of their input sets for efficiency
+;; purposes, so may not return the order you expect given ordered sets
+;; as input.
+;; for now, expect mostly ok, iff rows added (e.g. from Excel) all have the same columns.
+
 (defn new-columns
   "Determine new columns (including types) for table based on record.
    cols - the current columns of table (seq of keywords)
    record - the hashmap with needed columns of table (columns als keywords)
    return - seq of new columns"
   [db-spec cols record]
-  (if (nil? db-spec) (throw (Exception. "db-spec is nil")))
-  (let [names (vec (set/difference (set (keys record)) (set cols)))]
+  (when (nil? db-spec) (throw (Exception. "db-spec is nil")))
+  (let [names (vec (set/difference (oset/into-ordered-set (keys record)) (oset/into-ordered-set cols)))]
     (map #(column-with-datatype db-spec record %) names)))
 
 (defn new-columns2
@@ -505,11 +528,11 @@
    If based on own meta-data we see no new columns, we can already return with an empty result;
    if we see new columns, we also need to check DB meta-data."
   [db-spec db-handle table cols2 record]
-  (if (nil? db-spec) (throw (Exception. "db-spec is nil")))
-  (let [names (vec (set/difference (set (keys record)) (set cols2)))]
+  (when (nil? db-spec) (throw (Exception. "db-spec is nil")))
+  (let [names (vec (set/difference (oset/into-ordered-set (keys record)) (oset/into-ordered-set cols2)))]
     (if (seq names)
       (let [cols1 (columns1 db-handle table)
-            names2 (vec (set/difference (set (keys record)) (set cols1) (set cols2)))]
+            names2 (vec (set/difference (oset/into-ordered-set (keys record)) (oset/into-ordered-set cols1) (oset/into-ordered-set cols2)))]
         ;; also check db meta-data
         (map #(column-with-datatype db-spec record %) names2))
       [])))
@@ -547,7 +570,7 @@
   "Sanitise column/key names in record. eg replace - by _
    Replace every non-letter-digit with an underscore."
   [record]
-  (letfn [(replace-dash [s] (clojure.string/replace s #"[^A-Za-z0-9_]" "_"))
+  (letfn [(replace-dash [s] (str/replace s #"[^A-Za-z0-9_]" "_"))
           (sanitise-key [k] (-> k name replace-dash keyword))]
     (update-keys record sanitise-key)))
 
@@ -569,7 +592,9 @@
    table where needed; then insert record.
    Also call db-values on record."
   [db-handle table record]
+  (when *DEBUG* (println (format "insert called with record: %s" record)))
   (let [record-san (-> record sanitise-record db-values)]
+    (when *DEBUG* (println (format "record-san: %s" record-san)))
     (add-columns-for-record db-handle table record-san)
     (insert-no-check db-handle table record-san)))
 
@@ -583,17 +608,17 @@
   [db-handle table record]
   (let [record-san (sanitise-record record)]
     (try
-      (if *DEBUG* (println "DEBUG: Before first try: " record))
+      (when *DEBUG* (println "DEBUG: Before first try: " record))
       ;; if not error, result of insert-no-check will be returned.
       (insert-no-check db-handle table record-san)
       (catch Exception e
         (do
-          (if *DEBUG* (println "DEBUG: Caught exception: " e))
+          (when *DEBUG* (println "DEBUG: Caught exception: " e))
           (add-columns-for-record db-handle table record-san)
-          (if *DEBUG* (println "DEBUG: Added columns, now retry"))
+          (when *DEBUG* (println "DEBUG: Added columns, now retry"))
           ;; retry, but not with recursive call.
           (let [id (insert-no-check db-handle table record-san)]
-            (if *DEBUG* (println "DEBUG: Retry finished"))
+            (when *DEBUG* (println "DEBUG: Retry finished"))
             id))))))
 
 (defn query
@@ -612,3 +637,38 @@
   ([db-handle sql params]
    (j/execute! (current-connection db-handle) (cons sql params))))
 
+(comment
+  ;; create testcase for order of columns: either the same as in Excel, or maybe alphabetical.
+  (def db (open-db-sqlite "/tmp/testdb.db"))
+  (def row1 {:a 1 :b 2 :c 3 :d 4 :e 5})
+  (def row2 (omap/ordered-map :a 11 :b 12 :c 13 :d 14 :e 15))
+  (insert db :test1 row1)
+  (insert db :test1 row2)
+  (close-db db)
+  (println "Test from comment")
+  (version)
+
+  (do
+    (def dbpath "/tmp/testdb.db")
+    (fs/delete dbpath)
+    (def db (open-db-sqlite dbpath))
+    (def row2 (omap/ordered-map :a 11 :b 12 :c 13 :d 14 :e 15))
+    (insert db :test1 row2)
+    (close-db db)
+    (println "Test from comment"))
+
+  ;; in new-columns deze code:
+  #_(let [names (vec (set/difference (oset/into-ordered-set (keys record)) (oset/into-ordered-set cols)))]
+      (map #(column-with-datatype db-spec record %) names))
+
+  (set/difference (set (keys row2)) (set #{})) ;; -> returns e c b d a, in that order.
+  row2
+  (keys row2) ;; a..e in right order, as a seq.
+  (set (keys row2)) ;; wrong order.
+  ;; [clojure.set :as set]
+  ;; try ordered-set here.
+  (apply oset/ordered-set (keys row2)) ;; ok, this works, but is there something without needing apply?
+  (oset/into-ordered-set (keys row2)) ;; ok, this works, so better.
+  (set/difference (oset/into-ordered-set (keys row2)) (set #{})) ;; -> returns a..e, so ok.
+
+  )
