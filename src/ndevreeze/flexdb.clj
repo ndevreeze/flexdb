@@ -25,7 +25,7 @@
 (defn version
   "Return current version of library"
   []
-  "ndevreeze/flexdb v0.4.2-SNAPSHOT, 2025-10-29, with ordered-map")
+  "ndevreeze/flexdb v0.4.2-SNAPSHOT, 2025-11-05, with ordered-map")
 
 (declare table-exists?)
 
@@ -560,6 +560,22 @@
                                   (columns db-handle table) record))
         (create-table db-handle table (new-columns db-spec [] record)))))
 
+(defn omap-update-keys
+  "m f => {(f k) v ...}
+
+  Given a map m and a function f of 1-argument, returns a new map whose
+  keys are the result of applying f to the keys of m, mapped to the
+  corresponding values of m.
+  f must return a unique key for each key of m, else the behavior is undefined.
+  ordered-map version"
+  {:added "1.11"}
+  [m f]
+  (let [ret (persistent!
+             (reduce-kv (fn [acc k v] (assoc! acc (f k) v))
+                        (transient (omap/ordered-map))
+                        m))]
+    (with-meta ret (meta m))))
+
 ;; TODO - use map-kv-keys, see above.
 ;; (clojure.string/replace "abc.def" #"[^A-Za-z0-9_]" "_")
 ;; could use update-keys here?
@@ -572,7 +588,7 @@
   [record]
   (letfn [(replace-dash [s] (str/replace s #"[^A-Za-z0-9_]" "_"))
           (sanitise-key [k] (-> k name replace-dash keyword))]
-    (update-keys record sanitise-key)))
+    (omap-update-keys record sanitise-key)))
 
 #_(defn- sanitise-record2
     "Sanitise column/key names in record. eg replace - by _
