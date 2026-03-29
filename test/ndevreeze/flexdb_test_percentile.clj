@@ -1,8 +1,6 @@
 (ns ndevreeze.flexdb-test-percentile
   (:require [midje.sweet :as midje]
             [me.raynes.fs :as fs]
-            [java-time :as time]
-            [clojure.java.jdbc :as j]
             [clojure.java.io :as io]
             [ndevreeze.flexdb :as db]
             [ndevreeze.flexdb-sqlite :as dsqlite]
@@ -45,9 +43,13 @@
         (= (System/getProperty "os.name") "Linux") true
         :else false))
 
+(declare =>)
+
 (when (not TEST-PERCENTILE?)
   (midje/fact "test-percentile-dummy"
               1  => 1))
+
+
 
 (when TEST-PERCENTILE?
   ;; Use resources folder within this project folder.
@@ -63,6 +65,19 @@
     "Load percentile module. To be called as init-function for each new connection/transaction"
     [handle]
     (db/query handle (get-test-percentile-module-query)))
+
+  (declare handle)
+
+  ;; 2026-03-29: Even als losse aanroep.
+  (let [qload (get-test-percentile-module-query)]
+    (println "Loading module with query:" qload)
+    (test-in-new-db handle
+                    (do
+                      (db/in-transaction
+                          handle
+                        (db/query handle qload))
+                      :ok))   ; result of query
+    )
 
   ;; 2019-03-02: quite a lot of similarities between this SQLite version and
   ;; the Postgres one, so maybe should refactor.
