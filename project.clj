@@ -14,8 +14,13 @@
                  ;; 3.43.0.0 automatically with lein ancient. This
                  ;; removes some generated-id functionality, need to
                  ;; use 'RETURNING' clause, seems a bit more work.
-                 [org.xerial/sqlite-jdbc "3.51.3.0"] ;; SQLite ...
+
+                 ;; 2026-03-29: Newer versions, but test now fail, so try older versions.
+                 ;; [org.xerial/sqlite-jdbc "3.51.3.0"] ;; SQLite ...
                  [org.postgresql/postgresql "42.7.10"] ;; ... and Postgres for now.
+                 [org.xerial/sqlite-jdbc "3.50.3.0"] ;; SQLite ...
+                 ;; [org.postgresql/postgresql "42.7.8"] ;; ... and Postgres for now.
+
                  [ndevreeze/logger "0.6.2"]
                  ]
   :repl-options {:init-ns ndevreeze.flexdb}
