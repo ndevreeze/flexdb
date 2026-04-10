@@ -107,7 +107,7 @@
                                   (doseq [i (range 100)]
                                     (db/insert handle :ints {:value (inc i)}))
                                   (db/exec handle "create table perc95 as
-                                               select percentile(value, 95) perc
+                                               select ndv_percentile(value, 95) perc
                                                from ints"))
                                 (db/query handle "select perc from perc95")))
               => [{:perc 95.05}])
@@ -125,7 +125,7 @@
                                   (doseq [i (range 100)]
                                     (db/insert handle :ints {:value (inc i)}))
                                   (db/exec handle "create table perc95 as
-                                               select percentile(value, 95) perc
+                                               select ndv_percentile(value, 95) perc
                                                from ints"))
                                 (db/query handle "select perc from perc95")))
               => [{:perc 95.05}])
@@ -139,7 +139,7 @@
                                   (doseq [i (range 100)]
                                     (db/insert handle :ints {:value (inc i)}))
                                   (db/exec handle "create table perc95 as
-                                               select percentile(value, 95) perc
+                                               select ndv_percentile(value, 95) perc
                                                from ints"))
                                 (db/query handle "select perc from perc95")))
               => [{:perc 95.05}])
