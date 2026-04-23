@@ -23,7 +23,7 @@
                  ;; 2026-04-10: use 3.51.3.0, with buil-in
                  ;; percentile. Use own lib with ndv_percentile
                  ;; function.
-                 [org.xerial/sqlite-jdbc "3.51.3.0"] ;; SQLite ...
+                 [org.xerial/sqlite-jdbc "3.53.0.0"] ;; SQLite ...
                  ;; [org.postgresql/postgresql "42.7.8"] ;; ... and Postgres for now.
 
                  [ndevreeze/logger "0.6.2"]
