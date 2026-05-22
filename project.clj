@@ -4,7 +4,7 @@
   :url "http://github.com/ndevreeze/flexdb"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.12.4"]
+  :dependencies [[org.clojure/clojure "1.12.5"]
                  ;; [me.raynes/fs "1.4.6"] ;; file system functions
                  [clj-commons/fs "1.6.312"] ;; in place of me.raynes/fs.
                  [clojure.java-time "1.4.3"] ;; new in Java 8, replacing Joda-time
@@ -17,13 +17,13 @@
 
                  ;; 2026-03-29: Newer versions, but test now fail, so try older versions.
                  ;; [org.xerial/sqlite-jdbc "3.51.3.0"] ;; SQLite ...
-                 [org.postgresql/postgresql "42.7.10"] ;; ... and Postgres for now.
+                 [org.postgresql/postgresql "42.7.11"] ;; ... and Postgres for now.
 
                  ;; [org.xerial/sqlite-jdbc "3.51.1.0"] ;; SQLite ...
                  ;; 2026-04-10: use 3.51.3.0, with buil-in
                  ;; percentile. Use own lib with ndv_percentile
                  ;; function.
-                 [org.xerial/sqlite-jdbc "3.53.0.0"] ;; SQLite ...
+                 [org.xerial/sqlite-jdbc "3.53.1.0"] ;; SQLite ...
                  ;; [org.postgresql/postgresql "42.7.8"] ;; ... and Postgres for now.
 
                  [ndevreeze/logger "0.6.2"]
