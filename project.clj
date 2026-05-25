@@ -7,6 +7,7 @@
   :dependencies [[org.clojure/clojure "1.12.5"]
                  ;; [me.raynes/fs "1.4.6"] ;; file system functions
                  [clj-commons/fs "1.6.312"] ;; in place of me.raynes/fs.
+                 [nrepl "1.7.0"]
                  [clojure.java-time "1.4.3"] ;; new in Java 8, replacing Joda-time
                  [org.flatland/ordered "1.15.12"]
                  [org.clojure/java.jdbc "0.7.12"]
