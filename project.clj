@@ -7,7 +7,7 @@
   :dependencies [[org.clojure/clojure "1.12.6"]
                  ;; [me.raynes/fs "1.4.6"] ;; file system functions
                  [clj-commons/fs "1.6.312"] ;; in place of me.raynes/fs.
-                 [nrepl "1.7.0"]
+                 [nrepl "1.8.0"]
                  [clojure.java-time "1.4.3"] ;; new in Java 8, replacing Joda-time
                  [org.flatland/ordered "1.15.12"]
                  [org.clojure/java.jdbc "0.7.12"]
@@ -18,7 +18,7 @@
 
                  ;; 2026-03-29: Newer versions, but test now fail, so try older versions.
                  ;; [org.xerial/sqlite-jdbc "3.51.3.0"] ;; SQLite ...
-                 [org.postgresql/postgresql "42.7.13"] ;; ... and Postgres for now.
+                 [org.postgresql/postgresql "42.7.14"] ;; ... and Postgres for now.
 
                  ;; [org.xerial/sqlite-jdbc "3.51.1.0"] ;; SQLite ...
                  ;; 2026-04-10: use 3.51.3.0, with buil-in
