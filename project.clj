@@ -9,7 +9,7 @@
                  [clj-commons/fs "1.6.312"] ;; in place of me.raynes/fs.
                  [nrepl "1.8.0"]
                  [clojure.java-time "1.4.3"] ;; new in Java 8, replacing Joda-time
-                 [org.flatland/ordered "1.15.12"]
+                 [org.flatland/ordered "1.16.13"]
                  [org.clojure/java.jdbc "0.7.12"]
                  ;; 2023-09-23: sqlite-jdbc might be bumped to
                  ;; 3.43.0.0 automatically with lein ancient. This
@@ -24,7 +24,7 @@
                  ;; 2026-04-10: use 3.51.3.0, with buil-in
                  ;; percentile. Use own lib with ndv_percentile
                  ;; function.
-                 [org.xerial/sqlite-jdbc "3.53.4.0"] ;; SQLite ...
+                 [org.xerial/sqlite-jdbc "3.54.1.0"] ;; SQLite ...
                  ;; [org.postgresql/postgresql "42.7.8"] ;; ... and Postgres for now.
 
                  [ndevreeze/logger "0.6.2"]
